@@ -1,0 +1,144 @@
+:root {
+    --ink: #102a43;
+    --forest: #176b5c;
+    --forest-dark: #0f4c43;
+    --coral: #f9735b;
+    --sky: #e9f6f4;
+    --paper: #fbfcfd;
+    --line: #d8e3e0;
+}
+
+body {
+    background: var(--sky);
+    color: var(--ink);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.topbar {
+    background: #ffffff;
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 4px 18px rgba(16, 42, 67, 0.08);
+}
+
+.page-shell {
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+.brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--forest);
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.brand-title {
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.brand-subtitle {
+    color: #62748a;
+    font-size: 13px;
+}
+
+.nav-pills .nav-link {
+    color: var(--ink);
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .nav-link:hover {
+    background: var(--forest);
+    color: #ffffff;
+}
+
+.hero-panel {
+    background: var(--forest-dark);
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 28px;
+}
+
+.hero-panel p {
+    color: #dff3ef;
+}
+
+.summary-card,
+.content-card,
+.auth-card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 10px 26px rgba(16, 42, 67, 0.08);
+}
+
+.summary-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff0ed;
+    color: var(--coral);
+    font-weight: 700;
+}
+
+.section-title {
+    color: var(--ink);
+    font-weight: 700;
+}
+
+.btn-primary {
+    background: var(--forest);
+    border-color: var(--forest);
+}
+
+.btn-primary:hover {
+    background: var(--forest-dark);
+    border-color: var(--forest-dark);
+}
+
+.btn-accent {
+    background: var(--coral);
+    border-color: var(--coral);
+    color: #ffffff;
+}
+
+.table thead th {
+    background: #edf7f5;
+}
+
+.form-label {
+    font-weight: 700;
+}
+
+.required {
+    color: #dc2626;
+}
+
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    background: var(--forest-dark);
+}
+
+.auth-side {
+    color: #ffffff;
+}
+
+.auth-side p {
+    color: #dff3ef;
+}
+
+.auth-card {
+    padding: 28px;
+}
