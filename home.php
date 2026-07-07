@@ -1,3 +1,12 @@
+<?php
+session_start();
+
+// 1. KUNCI HALAMAN: Jika belum login, tendang balik ke index.php
+if (!isset($_SESSION['status_login']) || $_SESSION['status_login'] !== true) {
+    header("Location: index.php");
+    exit();
+}
+?>
 <!doctype html>
 <html lang="id">
 <head>
@@ -26,7 +35,7 @@
                 <a class="nav-link" href="buku.php">Buku</a>
                 <a class="nav-link" href="anggota.php">Anggota</a>
                 <a class="nav-link" href="peminjaman.php">Peminjaman</a>
-                <a class="nav-link" href="#">Log-out</a>
+                <a class="nav-link" href="logout.php">Log-out</a>
             </nav>
         </div>
     </div>
@@ -36,7 +45,8 @@
             <h1 class="page-title h3 mb-4">Dashboard Perpustakaan</h1>
 
             <div class="alert alert-success">
-                Selamat datang di Sistem Informasi Perpustakaan Sederhana.
+                Selamat datang di Sistem Informasi Perpustakaan Sederhana. 
+                (Petugas aktif: <strong><?php echo htmlspecialchars($_SESSION['username']); ?></strong>)
             </div>
 
             <div class="row g-3 mb-4">
