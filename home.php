@@ -1,11 +1,27 @@
 <?php
 session_start();
 
-// 1. KUNCI HALAMAN: Jika belum login, tendang balik ke index.php
+// 1. Hubungkan dengan database
+include 'koneksi.php';
+
+// 2. KUNCI HALAMAN: Jika belum login, tendang balik ke index.php
 if (!isset($_SESSION['status_login']) || $_SESSION['status_login'] !== true) {
     header("Location: index.php");
     exit();
 }
+
+// 3. Query Hitung Statistik Secara Dinamis dari Database Kamu
+$hitung_buku = mysqli_query($koneksi, "SELECT COUNT(*) AS total FROM buku");
+$data_buku   = mysqli_fetch_assoc($hitung_buku);
+
+$hitung_tersedia = mysqli_query($koneksi, "SELECT COUNT(*) AS total FROM buku WHERE status='tersedia'");
+$data_tersedia   = mysqli_fetch_assoc($hitung_tersedia);
+
+$hitung_dipinjam = mysqli_query($koneksi, "SELECT COUNT(*) AS total FROM peminjaman WHERE status_peminjaman='dipinjam'");
+$data_dipinjam   = mysqli_fetch_assoc($hitung_dipinjam);
+
+$hitung_anggota = mysqli_query($koneksi, "SELECT COUNT(*) AS total FROM anggota WHERE status='aktif'");
+$data_anggota   = mysqli_fetch_assoc($hitung_anggota);
 ?>
 <!doctype html>
 <html lang="id">
@@ -49,12 +65,13 @@ if (!isset($_SESSION['status_login']) || $_SESSION['status_login'] !== true) {
                 (Petugas aktif: <strong><?php echo htmlspecialchars($_SESSION['username']); ?></strong>)
             </div>
 
+            <!-- Bagian Angka Statistik Terhubung Otomatis ke DB -->
             <div class="row g-3 mb-4">
                 <div class="col-md-3">
                     <div class="card card-stat">
                         <div class="card-body">
                             <p class="text-muted mb-1">Total Buku</p>
-                            <h2 class="h3">125</h2>
+                            <h2 class="h3"><?php echo $data_buku['total']; ?></h2>
                         </div>
                     </div>
                 </div>
@@ -63,7 +80,7 @@ if (!isset($_SESSION['status_login']) || $_SESSION['status_login'] !== true) {
                     <div class="card card-stat">
                         <div class="card-body">
                             <p class="text-muted mb-1">Buku Tersedia</p>
-                            <h2 class="h3">98</h2>
+                            <h2 class="h3"><?php echo $data_tersedia['total']; ?></h2>
                         </div>
                     </div>
                 </div>
@@ -72,7 +89,7 @@ if (!isset($_SESSION['status_login']) || $_SESSION['status_login'] !== true) {
                     <div class="card card-stat">
                         <div class="card-body">
                             <p class="text-muted mb-1">Dipinjam</p>
-                            <h2 class="h3">27</h2>
+                            <h2 class="h3"><?php echo $data_dipinjam['total']; ?></h2>
                         </div>
                     </div>
                 </div>
@@ -81,12 +98,13 @@ if (!isset($_SESSION['status_login']) || $_SESSION['status_login'] !== true) {
                     <div class="card card-stat">
                         <div class="card-body">
                             <p class="text-muted mb-1">Anggota Aktif</p>
-                            <h2 class="h3">64</h2>
+                            <h2 class="h3"><?php echo $data_anggota['total']; ?></h2>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Tabel Peminjaman Terbaru Dinamis dengan INNER JOIN Akurat -->
             <div class="card card-box">
                 <div class="card-header bg-white">
                     <strong>Peminjaman Terbaru</strong>
@@ -104,14 +122,37 @@ if (!isset($_SESSION['status_login']) || $_SESSION['status_login'] !== true) {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>PMJ001</td>
-                                <td>Algoritma dan Struktur Data</td>
-                                <td>Siti Aminah</td>
-                                <td>20 Juni 2026</td>
-                                <td>27 Juni 2026</td>
-                                <td><span class="badge text-bg-warning">Dipinjam</span></td>
-                            </tr>
+                            <?php
+                            $query_terbaru = "SELECT peminjaman.*, buku.judul_buku, anggota.nama_anggota 
+                                              FROM peminjaman 
+                                              INNER JOIN buku ON peminjaman.id_buku = buku.id_buku 
+                                              INNER JOIN anggota ON peminjaman.id_anggota = anggota.id_anggota 
+                                              ORDER BY id_peminjaman DESC LIMIT 5";
+                            $tampil_terbaru = mysqli_query($koneksi, $query_terbaru);
+                            
+                            if(mysqli_num_rows($tampil_terbaru) > 0) {
+                                while($row = mysqli_fetch_array($tampil_terbaru)) {
+                                    ?>
+                                    <tr>
+                                        <td><?php echo $row['kode_peminjaman']; ?></td>
+                                        <td><?php echo $row['judul_buku']; ?></td>
+                                        <td><?php echo $row['nama_anggota']; ?></td>
+                                        <td><?php echo date('d F Y', strtotime($row['tanggal_pinjam'])); ?></td>
+                                        <td><?php echo date('d F Y', strtotime($row['tanggal_jatuh_tempo'])); ?></td>
+                                        <td>
+                                            <?php if($row['status_peminjaman'] == 'dipinjam') { ?>
+                                                <span class="badge text-bg-warning">Dipinjam</span>
+                                            <?php } else { ?>
+                                                <span class="badge text-bg-success">Dikembalikan</span>
+                                            <?php } ?>
+                                        </td>
+                                    </tr>
+                                    <?php
+                                }
+                            } else {
+                                echo "<tr><td colspan='6' class='text-center text-muted'>Belum ada transaksi peminjaman</td></tr>";
+                            }
+                            ?>
                         </tbody>
                     </table>
                 </div>
