@@ -1,3 +1,36 @@
+<?php
+// 1. Jalankan session check untuk keamanan login
+session_start();
+if (!isset($_SESSION['username'])) {
+    header("Location: index.php");
+    exit();
+}
+
+// 2. Hubungkan dengan file koneksi kamu
+include 'koneksi.php';
+
+// 3. Logika untuk menyimpan data transaksi ke database saat tombol Simpan diklik
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $kode_peminjaman    = $_POST['kode_peminjaman'];
+    $id_anggota        = $_POST['id_anggota'];
+    $id_buku           = $_POST['id_buku'];
+    $tanggal_pinjam     = $_POST['tanggal_pinjam'];
+    $tanggal_jatuh_tempo= $_POST['tanggal_jatuh_tempo'];
+    
+    // Tanggal kembali diisi sesuai input, jika kosong maka set jadi NULL di database
+    $tanggal_kembali    = !empty($_POST['tanggal_kembali']) ? "'".$_POST['tanggal_kembali']."'" : "NULL";
+
+    // Query insert disesuaikan dengan struktur tabel peminjaman kamu
+    $query_insert = "INSERT INTO peminjaman (kode_peminjaman, id_buku, id_anggota, tanggal_pinjam, tanggal_jatuh_tempo, tanggal_kembali) 
+                     VALUES ('$kode_peminjaman', '$id_buku', '$id_anggota', '$tanggal_pinjam', '$tanggal_jatuh_tempo', $tanggal_kembali)";
+    
+    if (mysqli_query($koneksi, $query_insert)) {
+        echo "<script>alert('Data transaksi berhasil disimpan!'); window.location='peminjaman.php';</script>";
+    } else {
+        echo "<script>alert('Gagal menyimpan data: " . mysqli_error($koneksi) . "');</script>";
+    }
+}
+?>
 <!doctype html>
 <html lang="id">
 <head>
@@ -25,7 +58,7 @@
                 <a class="nav-link" href="home.php">Dashboard</a>
                 <a class="nav-link" href="buku.php">Buku</a>
                 <a class="nav-link" href="anggota.php">Anggota</a>
-                <a class="nav-link  active" href="peminjaman.php">Peminjaman</a>
+                <a class="nav-link active" href="peminjaman.php">Peminjaman</a>
                 <a class="nav-link" href="logout.php">Log-out</a>
             </nav>
         </div>
@@ -44,7 +77,8 @@
                     <strong>Form Peminjaman</strong>
                 </div>
                 <div class="card-body">
-                    <form action="#" method="post">
+                    <!-- Action dikosongkan agar memproses ke PHP di atas -->
+                    <form action="" method="post">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Kode Peminjaman <span class="required">*</span></label>
@@ -54,22 +88,34 @@
                                 <label class="form-label">Anggota <span class="required">*</span></label>
                                 <select name="id_anggota" class="form-select" required>
                                     <option value="">Pilih anggota</option>
-                                    <option value="1">AG001 - Siti Aminah</option>
-                                    <option value="2">AG002 - Andi Pratama</option>
+                                    <?php 
+                                    // Mengambil data anggota langsung dari database temanmu secara dinamis
+                                    $query_anggota = mysqli_query($koneksi, "SELECT * FROM anggota");
+                                    while($a = mysqli_fetch_array($query_anggota)) {
+                                        // Sesuaikan nama kolom tabel anggota jika berbeda (misal nama_anggota)
+                                        echo "<option value='".$a['id_anggota']."'>".$a['id_anggota']." - ".$a['nama']."</option>";
+                                    }
+                                    ?>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Buku <span class="required">*</span></label>
                                 <select name="id_buku" class="form-select" required>
                                     <option value="">Pilih buku</option>
-                                    <option value="1">BK001 - Dasar Pemrograman Web</option>
-                                    <option value="2">BK002 - Manajemen Basis Data</option>
-                                    <option value="3">BK003 - Algoritma dan Struktur Data</option>
+                                    <?php 
+                                    // Mengambil data buku langsung dari database temanmu secara dinamis
+                                    $query_buku = mysqli_query($koneksi, "SELECT * FROM buku");
+                                    while($b = mysqli_fetch_array($query_buku)) {
+                                        // Sesuaikan nama kolom tabel buku jika berbeda (misal judul_buku)
+                                        echo "<option value='".$b['id_buku']."'>BK00".$b['id_buku']." - ".$b['judul']."</option>";
+                                    }
+                                    ?>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Tanggal Pinjam <span class="required">*</span></label>
-                                <input type="date" name="tanggal_pinjam" class="form-control" required>
+                                <!-- Default value otomatis diisi tanggal hari ini -->
+                                <input type="date" name="tanggal_pinjam" class="form-control" value="<?php echo date('Y-m-d'); ?>" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Tanggal Jatuh Tempo <span class="required">*</span></label>
@@ -78,18 +124,6 @@
                             <div class="col-md-6">
                                 <label class="form-label">Tanggal Kembali</label>
                                 <input type="date" name="tanggal_kembali" class="form-control">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Status Peminjaman</label>
-                                <select name="status_peminjaman" class="form-select">
-                                    <option value="dipinjam">Dipinjam</option>
-                                    <option value="dikembalikan">Dikembalikan</option>
-                                    <option value="terlambat">Terlambat</option>
-                                </select>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Catatan</label>
-                                <textarea name="catatan" class="form-control" rows="3"></textarea>
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-primary">Simpan</button>
@@ -113,25 +147,49 @@
                                 <th>Jatuh Tempo</th>
                                 <th>Kembali</th>
                                 <th>Status</th>
-                                <th>Aksi</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>1</td>
-                                <td>PMJ001</td>
-                                <td>Algoritma dan Struktur Data</td>
-                                <td>Siti Aminah</td>
-                                <td>20 Juni 2026</td>
-                                <td>27 Juni 2026</td>
-                                <td>-</td>
-                                <td><span class="badge text-bg-warning">Dipinjam</span></td>
-                                <td>
-                                    <a href="#" class="btn btn-sm btn-warning">Edit</a>
-                                    <a href="#" class="btn btn-sm btn-success">Kembali</a>
-                                    <a href="#" class="btn btn-sm btn-danger">Hapus</a>
-                                </td>
-                            </tr>
+<tbody>
+                            <?php 
+                            $no = 1;
+                            // Query INNER JOIN yang sudah disesuaikan 100% dengan nama kolom database kamu
+                            $query_tampil = "SELECT peminjaman.*, buku.judul_buku AS judul_buku, anggota.nama_anggota AS nama_anggota 
+                                             FROM peminjaman 
+                                             INNER JOIN buku ON peminjaman.id_buku = buku.id_buku 
+                                             INNER JOIN anggota ON peminjaman.id_anggota = anggota.id_anggota 
+                                             ORDER BY id_peminjaman DESC";
+                            
+                            $data_peminjaman = mysqli_query($koneksi, $query_tampil);
+                            
+                            while($row = mysqli_fetch_array($data_peminjaman)) {
+                                ?>
+                                <tr>
+                                    <td><?php echo $no++; ?></td>
+                                    <td><?php echo $row['kode_peminjaman']; ?></td>
+                                    <td><?php echo $row['judul_buku']; ?></td>
+                                    <td><?php echo $row['nama_anggota']; ?></td>
+                                    <td><?php echo date('d M Y', strtotime($row['tanggal_pinjam'])); ?></td>
+                                    <td><?php echo date('d M Y', strtotime($row['tanggal_jatuh_tempo'])); ?></td>
+                                    <td>
+                                        <?php 
+                                        echo ($row['tanggal_kembali'] != NULL && $row['tanggal_kembali'] != '0000-00-00') 
+                                             ? date('d M Y', strtotime($row['tanggal_kembali'])) 
+                                             : '-'; 
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                        if($row['tanggal_kembali'] == NULL || $row['tanggal_kembali'] == '0000-00-00') {
+                                            echo '<span class="badge text-bg-warning">Dipinjam</span>';
+                                        } else {
+                                            echo '<span class="badge text-bg-success">Dikembalikan</span>';
+                                        }
+                                        ?>
+                                    </td>
+                                </tr>
+                                <?php 
+                            } 
+                            ?>
                         </tbody>
                     </table>
                 </div>
