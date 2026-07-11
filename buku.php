@@ -1,3 +1,8 @@
+<?php 
+// Memanggil konfigurasi database
+    include 'koneksi.php'; 
+?>
+
 <!doctype html>
 <html lang="id">
 <head>
@@ -117,32 +122,40 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <?php
+                            // Mengambil data dari tabel buku di database
+                            $query = mysqli_query($koneksi, "SELECT * FROM buku ORDER BY id_buku DESC");
+                        
+                            // Variabel untuk penomoran otomatis tabel
+                            $no = 1;
+                        
+                            // Looping untuk menampilkan data secara dinamis
+                            while ($data = mysqli_fetch_array($query)) {
+                            ?>
                             <tr>
-                                <td>1</td>
-                                <td>BK001</td>
-                                <td>Dasar Pemrograman Web</td>
-                                <td>Andi Saputra</td>
-                                <td>Teknologi</td>
-                                <td>5</td>
-                                <td><span class="badge text-bg-success">Tersedia</span></td>
+                                <td><?php echo $no++; ?></td>
+                                <td><?php echo $data['kode_buku']; ?></td>
+                                <td><?php echo $data['judul_buku']; ?></td>
+                                <td><?php echo $data['penulis']; ?></td>
+                                <td><?php echo $data['kategori']; ?></td>
+                                <td><?php echo $data['stok']; ?></td>
                                 <td>
-                                    <a href="#" class="btn btn-sm btn-warning">Edit</a>
-                                    <a href="#" class="btn btn-sm btn-danger">Hapus</a>
+                                    <!-- Menampilkan status dengan badge warna sesuai kondisi -->
+                                    <?php if($data['status'] == 'tersedia') { ?>
+                                        <span class="badge text-bg-success">Tersedia</span>
+                                    <?php } else { ?>
+                                        <span class="badge text-bg-warning"><?php echo ucfirst($data['status']); ?></span>
+                                    <?php } ?>
+                                </td>
+                                <td>
+                                    <!-- Tombol aksi yang membawa parameter ID Buku untuk Edit & Hapus -->
+                                    <a href="buku_edit.php?id=<?php echo $data['id_buku']; ?>" class="btn btn-sm btn-warning">Edit</a>
+                                    <a href="buku_hapus.php?id=<?php echo $data['id_buku']; ?>" class="btn btn-sm btn-danger">Hapus</a>
                                 </td>
                             </tr>
-                            <tr>
-                                <td>2</td>
-                                <td>BK003</td>
-                                <td>Algoritma dan Struktur Data</td>
-                                <td>Budi Santoso</td>
-                                <td>Teknologi</td>
-                                <td>1</td>
-                                <td><span class="badge text-bg-warning">Dipinjam</span></td>
-                                <td>
-                                    <a href="#" class="btn btn-sm btn-warning">Edit</a>
-                                    <a href="#" class="btn btn-sm btn-danger">Hapus</a>
-                                </td>
-                            </tr>
+                            <?php 
+                            } // Penutup perulangan while
+                            ?>
                         </tbody>
                     </table>
                 </div>
