@@ -1,6 +1,33 @@
 <?php 
 // Memanggil konfigurasi database
     include 'koneksi.php'; 
+
+// Cek apakah tombol Simpan dengan name="simpan_buku" sudah diklik
+if (isset($_POST['simpan_buku'])) {
+    
+    // Mengambil data yang dikirimkan oleh form inputan HTML
+    $kode_buku    = $_POST['kode_buku'];
+    $judul_buku   = $_POST['judul_buku'];
+    $penulis      = $_POST['penulis'];
+    $penerbit     = $_POST['penerbit'];
+    $tahun_terbit = $_POST['tahun_terbit'];
+    $kategori     = $_POST['kategori'];
+    $stok         = $_POST['stok'];
+    $status       = $_POST['status'];
+
+    // Menjalankan perintah SQL INSERT INTO untuk menyimpan data ke database
+    $insert = mysqli_query($koneksi, "INSERT INTO buku (kode_buku, judul_buku, penulis, penerbit, tahun_terbit, kategori, stok, status) 
+              VALUES ('$kode_buku', '$judul_buku', '$penulis', '$penerbit', '$tahun_terbit', '$kategori', '$stok', '$status')");
+
+    // Cek apakah proses query ke database berhasil atau gagal
+    if ($insert) {
+        // Jika berhasil, munculkan notifikasi sukses dan refresh kembali ke halaman buku.php
+        echo "<script>alert('Selamat! Data buku baru berhasil disimpan.'); window.location='buku.php';</script>";
+    } else {
+        // Jika gagal (misal kode buku kembar/duplicate), munculkan notifikasi gagal
+        echo "<script>alert('Waduh, gagal menyimpan data ke database.');</script>";
+    }
+}
 ?>
 
 <!doctype html>
@@ -58,7 +85,7 @@
                     <strong>Form Tambah / Edit Buku</strong>
                 </div>
                 <div class="card-body">
-                    <form action="#" method="post">
+                    <form action="" method="post">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Kode Buku <span class="required">*</span></label>
@@ -98,7 +125,7 @@
                                 </select>
                             </div>
                             <div class="col-12">
-                                <button type="submit" class="btn btn-primary">Simpan</button>
+                                <button type="submit" name="simpan_buku" class="btn btn-primary">Simpan</button>
                                 <button type="reset" class="btn btn-outline-secondary">Reset</button>
                             </div>
                         </div>
