@@ -27,8 +27,64 @@ if (isset($_POST['simpan_buku'])) {
         // Jika gagal (misal kode buku kembar/duplicate), munculkan notifikasi gagal
         echo "<script>alert('Waduh, gagal menyimpan data ke database.');</script>";
     }
-}
-?>
+    }
+
+    // FITUR EDIT (UPDATE)
+    if (isset($_POST['update_buku'])) {
+        $id_buku      = $_POST['id_buku'];
+        $kode_buku    = $_POST['kode_buku'];
+        $judul_buku   = $_POST['judul_buku'];
+        $penulis      = $_POST['penulis'];
+        $penerbit     = $_POST['penerbit'];
+        $tahun_terbit = $_POST['tahun_terbit'];
+        $kategori     = $_POST['kategori'];
+        $stok         = $_POST['stok'];
+        $status       = $_POST['status'];
+    
+        $update = mysqli_query($koneksi, "UPDATE buku SET 
+                    kode_buku='$kode_buku', 
+                    judul_buku='$judul_buku', 
+                    penulis='$penulis', 
+                    penerbit='$penerbit', 
+                    tahun_terbit='$tahun_terbit', 
+                    kategori='$kategori', 
+                    stok='$stok', 
+                    status='$status' 
+                  WHERE id_buku='$id_buku'");
+    
+        if ($update) {
+            echo "<script>alert('Data buku berhasil diperbarui.'); window.location='buku.php';</script>";
+        } else {
+            echo "<script>alert('Gagal memperbarui data buku.');</script>";
+        }
+    }
+    
+    // FITUR HAPUS (DELETE)
+    if (isset($_GET['hapus'])) {
+        $id_hapus = $_GET['hapus'];
+        $hapus = mysqli_query($koneksi, "DELETE FROM buku WHERE id_buku='$id_hapus'");
+    
+        if ($hapus) {
+            echo "<script>alert('Data buku berhasil dihapus.'); window.location='buku.php';</script>";
+        } else {
+            echo "<script>alert('Gagal menghapus data buku.');</script>";
+        }
+        exit();
+    }
+
+    // AMBIL DATA UNTUK MODE EDIT
+    $mode_edit = false;
+    $data_edit = null;
+    
+    if (isset($_GET['edit'])) {
+        $id_edit  = $_GET['edit'];
+        $cek_edit = mysqli_query($koneksi, "SELECT * FROM buku WHERE id_buku='$id_edit'");
+        if (mysqli_num_rows($cek_edit) > 0) {
+            $data_edit = mysqli_fetch_assoc($cek_edit);
+            $mode_edit = true;
+        }
+    }
+    ?>
 
 <!doctype html>
 <html lang="id">
@@ -71,7 +127,7 @@ if (isset($_POST['simpan_buku'])) {
                 Data buku berhasil diproses.
             </div>
 
-            <form action="#" method="get" class="row g-2 mb-3">
+            <form action="buku.php" method="get" class="row g-2 mb-3">
                 <div class="col-md-9">
                     <input type="search" name="keyword" class="form-control" placeholder="Cari kode, judul, penulis, atau kategori buku">
                 </div>
@@ -82,51 +138,66 @@ if (isset($_POST['simpan_buku'])) {
 
             <div class="card card-box mb-4">
                 <div class="card-header bg-white">
-                    <strong>Form Tambah / Edit Buku</strong>
+                    <strong><?php echo $mode_edit ? 'Form Edit Buku' : 'Form Tambah Buku'; ?></strong>
                 </div>
                 <div class="card-body">
                     <form action="" method="post">
+                        <?php if ($mode_edit) { ?>
+                            <input type="hidden" name="id_buku" value="<?php echo $data_edit['id_buku']; ?>">
+                        <?php } ?>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Kode Buku <span class="required">*</span></label>
-                                <input type="text" name="kode_buku" class="form-control" required placeholder="BK001">
+                                <input type="text" name="kode_buku" class="form-control" required placeholder="BK001"
+                                       value="<?php echo $mode_edit ? $data_edit['kode_buku'] : ''; ?>">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Judul Buku <span class="required">*</span></label>
-                                <input type="text" name="judul_buku" class="form-control" required minlength="3">
+                                <input type="text" name="judul_buku" class="form-control" required minlength="3"
+                                       value="<?php echo $mode_edit ? $data_edit['judul_buku'] : ''; ?>">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Penulis <span class="required">*</span></label>
-                                <input type="text" name="penulis" class="form-control" required>
+                                <input type="text" name="penulis" class="form-control" required
+                                       value="<?php echo $mode_edit ? $data_edit['penulis'] : ''; ?>">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Penerbit</label>
-                                <input type="text" name="penerbit" class="form-control">
+                                <input type="text" name="penerbit" class="form-control"
+                                       value="<?php echo $mode_edit ? $data_edit['penerbit'] : ''; ?>">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Tahun Terbit</label>
-                                <input type="number" name="tahun_terbit" class="form-control" min="1900" max="2099">
+                                <input type="number" name="tahun_terbit" class="form-control" min="1900" max="2099"
+                                       value="<?php echo $mode_edit ? $data_edit['tahun_terbit'] : ''; ?>">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Kategori</label>
-                                <input type="text" name="kategori" class="form-control">
+                                <input type="text" name="kategori" class="form-control"
+                                       value="<?php echo $mode_edit ? $data_edit['kategori'] : ''; ?>">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Stok <span class="required">*</span></label>
-                                <input type="number" name="stok" class="form-control" required min="0">
+                                <input type="number" name="stok" class="form-control" required min="0"
+                                       value="<?php echo $mode_edit ? $data_edit['stok'] : ''; ?>">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Status Buku</label>
                                 <select name="status" class="form-select" required>
-                                    <option value="tersedia">Tersedia</option>
-                                    <option value="dipinjam">Dipinjam</option>
-                                    <option value="rusak">Rusak</option>
-                                    <option value="hilang">Hilang</option>
+                                    <option value="tersedia" <?php echo ($mode_edit && $data_edit['status']=='tersedia') ? 'selected' : ''; ?>>Tersedia</option>
+                                    <option value="dipinjam" <?php echo ($mode_edit && $data_edit['status']=='dipinjam') ? 'selected' : ''; ?>>Dipinjam</option>
+                                    <option value="rusak" <?php echo ($mode_edit && $data_edit['status']=='rusak') ? 'selected' : ''; ?>>Rusak</option>
+                                    <option value="hilang" <?php echo ($mode_edit && $data_edit['status']=='hilang') ? 'selected' : ''; ?>>Hilang</option>
                                 </select>
                             </div>
                             <div class="col-12">
-                                <button type="submit" name="simpan_buku" class="btn btn-primary">Simpan</button>
-                                <button type="reset" class="btn btn-outline-secondary">Reset</button>
+                                <?php if ($mode_edit) { ?>
+                                    <button type="submit" name="update_buku" class="btn btn-primary">Update</button>
+                                    <a href="buku.php" class="btn btn-outline-secondary">Batal</a>
+                                <?php } else { ?>
+                                    <button type="submit" name="simpan_buku" class="btn btn-primary">Simpan</button>
+                                    <button type="reset" class="btn btn-outline-secondary">Reset</button>
+                                <?php } ?>
                             </div>
                         </div>
                     </form>
@@ -150,16 +221,27 @@ if (isset($_POST['simpan_buku'])) {
                         </thead>
                         <tbody>
                             <?php
-                            // Mengambil data dari tabel buku di database
-                            $query = mysqli_query($koneksi, "SELECT * FROM buku ORDER BY id_buku DESC");
-                        
+                            // LOGIKA PENCARIAN BARU
+                            if (isset($_GET['keyword']) && $_GET['keyword'] != '') {
+                                $keyword = mysqli_real_escape_string($koneksi, $_GET['keyword']);
+                                // Mencari berdasarkan kode, judul, penulis, atau kategori
+                                $query = mysqli_query($koneksi, "SELECT * FROM buku WHERE 
+                                          kode_buku LIKE '%$keyword%' OR 
+                                          judul_buku LIKE '%$keyword%' OR 
+                                          penulis LIKE '%$keyword%' OR 
+                                          kategori LIKE '%$keyword%' 
+                                          ORDER BY id_buku DESC");
+                            } else {
+                                // Jika tidak ada pencarian, tampilkan semua data bawaan kamu
+                                $query = mysqli_query($koneksi, "SELECT * FROM buku ORDER BY id_buku DESC");
+                            }
+                            
                             // Variabel untuk penomoran otomatis tabel
                             $no = 1;
-                        
+                            
                             // Looping untuk menampilkan data secara dinamis
                             while ($data = mysqli_fetch_array($query)) {
                             ?>
-                            <tr>
                                 <td><?php echo $no++; ?></td>
                                 <td><?php echo $data['kode_buku']; ?></td>
                                 <td><?php echo $data['judul_buku']; ?></td>
@@ -176,8 +258,8 @@ if (isset($_POST['simpan_buku'])) {
                                 </td>
                                 <td>
                                     <!-- Tombol aksi yang membawa parameter ID Buku untuk Edit & Hapus -->
-                                    <a href="buku_edit.php?id=<?php echo $data['id_buku']; ?>" class="btn btn-sm btn-warning">Edit</a>
-                                    <a href="buku_hapus.php?id=<?php echo $data['id_buku']; ?>" class="btn btn-sm btn-danger">Hapus</a>
+                                    <a href="buku.php?edit=<?php echo $data['id_buku']; ?>" class="btn btn-sm btn-warning">Edit</a>
+                                    <a href="buku.php?hapus=<?php echo $data['id_buku']; ?>" class="btn btn-sm btn-danger">Hapus</a>
                                 </td>
                             </tr>
                             <?php 
