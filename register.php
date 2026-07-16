@@ -1,3 +1,45 @@
+<?php
+// 1.memanggil file koneksi database
+include 'koneksi.php';
+
+// 2.proses logika pendaftaran (php)
+if (isset($_POST['register'])) {
+    //ambil data dari form dengan aman
+    $nama_lengkap   = mysqli_real_escape_string($conn, $_POST['nama_lengkap']);
+    $email          = mysqli_real_escape_string($conn, $_POST['email']);
+    $username       = mysqli_real_escape_string($conn, $_POST['username']);
+    $role           = mysqli_real_escape_string($conn, $_POST['role']);
+    $password       = $_POST['password'];
+    $konfirmasi     = $_POST['konfirmasi_password'];
+    
+    //validasi kecocokan password
+    if ($password !== $konfirmasi) {
+        $error_massage = "konfigurasi password tidak cocok!";
+    } else {
+        //cek apakah username atau email sudah terdaftar di database
+        $cek_user = mysqli_query($conn, "SELECT * FROM petugas WHERE username = '$username' OR 'email'");
+
+        if (mysqli_num_rows($cek_user) > 0) {
+            $error_message = "Username atau email sudah digunakan!";
+        } else {
+            //hash password untuk keamanan  (bisa mengganggu password_hash atau MD5 sesuai kesepakatan kelompok)
+            //dibawah ini menggunakan password-hash (sangat disarankan & standar modern)
+            $password_hashed = password_hash($password, PASSWORD_BCRYPT);
+
+            //query untuk memaukkan data ke database
+            $query = "INSERT INT petugas (nama_lengkap, email, username, role, password)
+                        VALUES ('$nama_lengkap', '$username', '$role', '$password_hashed')";
+
+                    if (mysqli_query($conn, $query)) {
+                $success_message = "Akun berhasil didaftarkan! Silakan masuk.";
+            } else {
+                $error_message = "Gagal mendaftarkan akun: " . mysqli_error($conn);
+            }
+        }
+    }
+}
+?>
+
 <!doctype html>
 <html lang="id">
 <head>
