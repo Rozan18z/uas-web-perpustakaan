@@ -56,6 +56,7 @@ $data_anggota   = mysqli_fetch_assoc($hitung_anggota);
                         <a class="nav-link" href="buku.php">Buku</a>
                         <a class="nav-link" href="anggota.php">Anggota</a>
                         <a class="nav-link" href="peminjaman.php">Peminjaman</a>
+                        <a class="nav-link" href="pengembalian.php">Pengembalian</a>
                         <a class="nav-link" href="logout.php">Log-out</a>
                     </nav>
                 </div>

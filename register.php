@@ -1,39 +1,37 @@
 <?php
-// 1.memanggil file koneksi database
+// 1. Memanggil file koneksi database
 include 'koneksi.php';
 
-// 2.proses logika pendaftaran (php)
+// 2. Proses logika pendaftaran (PHP)
 if (isset($_POST['register'])) {
-    //ambil data dari form dengan aman
-    $nama_lengkap   = mysqli_real_escape_string($conn, $_POST['nama_lengkap']);
-    $email          = mysqli_real_escape_string($conn, $_POST['email']);
-    $username       = mysqli_real_escape_string($conn, $_POST['username']);
-    $role           = mysqli_real_escape_string($conn, $_POST['role']);
+    // Ambil data dari form dengan aman
+    $nama_lengkap   = mysqli_real_escape_string($koneksi, $_POST['nama_lengkap']);
+    $email          = mysqli_real_escape_string($koneksi, $_POST['email']);
+    $username       = mysqli_real_escape_string($koneksi, $_POST['username']);
+    $role           = mysqli_real_escape_string($koneksi, $_POST['role']);
     $password       = $_POST['password'];
     $konfirmasi     = $_POST['konfirmasi_password'];
     
-    //validasi kecocokan password
+    // Validasi kecocokan password
     if ($password !== $konfirmasi) {
-        $error_massage = "konfigurasi password tidak cocok!";
+        $error_message = "Konfirmasi password tidak cocok!";
     } else {
-        //cek apakah username atau email sudah terdaftar di database
-        $cek_user = mysqli_query($conn, "SELECT * FROM petugas WHERE username = '$username' OR 'email'");
+        // Cek apakah username atau email sudah terdaftar di tabel 'users'
+        $cek_user = mysqli_query($koneksi, "SELECT * FROM users WHERE username = '$username' OR email = '$email'");
 
         if (mysqli_num_rows($cek_user) > 0) {
-            $error_message = "Username atau email sudah digunakan!";
+            $error_message = "Waduh, Username atau email sudah digunakan!";
         } else {
-            //hash password untuk keamanan  (bisa mengganggu password_hash atau MD5 sesuai kesepakatan kelompok)
-            //dibawah ini menggunakan password-hash (sangat disarankan & standar modern)
-            $password_hashed = password_hash($password, PASSWORD_BCRYPT);
+            // LOGIKA DIPERBAIKI: Kita tidak me-ngacak passwordnya, biar sinkron dengan index.php
+            $query = "INSERT INTO users (nama_lengkap, email, username, role, password)
+                      VALUES ('$nama_lengkap', '$email', '$username', '$role', '$password')";
 
-            //query untuk memaukkan data ke database
-            $query = "INSERT INT petugas (nama_lengkap, email, username, role, password)
-                        VALUES ('$nama_lengkap', '$username', '$role', '$password_hashed')";
-
-                    if (mysqli_query($conn, $query)) {
-                $success_message = "Akun berhasil didaftarkan! Silakan masuk.";
+            // Jika berhasil disimpan, munculkan Pop-up dan lempar ke index.php
+            if (mysqli_query($koneksi, $query)) {
+                echo "<script>alert('Akun berhasil didaftarkan! Silakan login dengan akun barumu.'); window.location='index.php';</script>";
+                exit(); // Hentikan proses agar redirect berjalan mulus
             } else {
-                $error_message = "Gagal mendaftarkan akun: " . mysqli_error($conn);
+                $error_message = "Gagal mendaftarkan akun: " . mysqli_error($koneksi);
             }
         }
     }
@@ -64,7 +62,14 @@ if (isset($_POST['register'])) {
                     <h2 class="h4 section-title mb-1">Register Akun</h2>
                     <p class="text-muted mb-4">Isi data berikut untuk membuat akun baru.</p>
 
-                    <form action="#" method="post">
+                    <!-- Tempat memunculkan notifikasi Error / Sukses -->
+                    <?php if (isset($error_message)) : ?>
+                        <div class="alert alert-danger text-center" role="alert">
+                            <?php echo $error_message; ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <form action="" method="post">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">Nama Lengkap <span class="required">*</span></label>
@@ -101,7 +106,8 @@ if (isset($_POST['register'])) {
                             </div>
 
                             <div class="col-12">
-                                <button type="submit" class="btn btn-primary w-100">Daftar Akun</button>
+                                <!-- Ditambahkan name="register" agar diproses oleh PHP -->
+                                <button type="submit" name="register" class="btn btn-primary w-100">Daftar Akun</button>
                             </div>
                         </div>
                     </form>

@@ -59,17 +59,28 @@ if (isset($_POST['simpan_buku'])) {
         }
     }
     
-    // FITUR HAPUS (DELETE)
+   // FITUR HAPUS (DELETE)
     if (isset($_GET['hapus'])) {
-        $id_hapus = $_GET['hapus'];
-        $hapus = mysqli_query($koneksi, "DELETE FROM buku WHERE id_buku='$id_hapus'");
-    
-        if ($hapus) {
-            echo "<script>alert('Data buku berhasil dihapus.'); window.location='buku.php';</script>";
+        $id_hapus = mysqli_real_escape_string($koneksi, $_GET['hapus']);
+        
+        // 1. Cek dulu apakah ID buku ini ada di tabel peminjaman
+        $cek_transaksi = mysqli_query($koneksi, "SELECT * FROM peminjaman WHERE id_buku = '$id_hapus'");
+        
+        if (mysqli_num_rows($cek_transaksi) > 0) {
+            // Jika buku masih ada di riwayat peminjaman, batalkan hapus dan beri peringatan
+            echo "<script>alert('Waduh, buku ini tidak bisa dihapus karena masih ada di riwayat Peminjaman! Hapus data peminjamannya terlebih dahulu jika ingin menghapus buku.'); window.location='buku.php';</script>";
+            exit();
         } else {
-            echo "<script>alert('Gagal menghapus data buku.');</script>";
+            // Jika bersih dari transaksi, baru eksekusi perintah hapus
+            $hapus = mysqli_query($koneksi, "DELETE FROM buku WHERE id_buku='$id_hapus'");
+        
+            if ($hapus) {
+                echo "<script>alert('Data buku berhasil dihapus.'); window.location='buku.php';</script>";
+            } else {
+                echo "<script>alert('Gagal menghapus data buku.'); window.location='buku.php';</script>";
+            }
+            exit();
         }
-        exit();
     }
 
     // AMBIL DATA UNTUK MODE EDIT
@@ -114,6 +125,7 @@ if (isset($_POST['simpan_buku'])) {
                 <a class="nav-link active" href="buku.php">Buku</a>
                 <a class="nav-link" href="anggota.php">Anggota</a>
                 <a class="nav-link" href="peminjaman.php">Peminjaman</a>
+                <a class="nav-link" href="pengembalian.php">Pengembalian</a>
                 <a class="nav-link" href="logout.php">Log-out</a>
             </nav>
         </div>
@@ -127,14 +139,20 @@ if (isset($_POST['simpan_buku'])) {
                 Data buku berhasil diproses.
             </div>
 
-            <form action="buku.php" method="get" class="row g-2 mb-3">
-                <div class="col-md-9">
-                    <input type="search" name="keyword" class="form-control" placeholder="Cari kode, judul, penulis, atau kategori buku">
-                </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-outline-primary w-100">Cari Buku</button>
-                </div>
-            </form>
+          <form method="GET" action="buku.php" class="mb-3">
+    <div class="input-group">
+        <!-- Input pencarian -->
+        <input type="text" name="cari" class="form-control" placeholder="Cari judul atau kode buku..." 
+               value="<?php echo isset($_GET['cari']) ? $_GET['cari'] : ''; ?>">
+        
+        <button type="submit" class="btn btn-primary">Cari</button>
+        
+        <!-- Logika memunculkan tombol Reset JIKA sedang melakukan pencarian -->
+        <?php if(isset($_GET['cari']) && $_GET['cari'] != '') { ?>
+            <a href="buku.php" class="btn btn-danger">Tampilkan Semua Buku</a>
+        <?php } ?>
+    </div>
+</form>
 
             <div class="card card-box mb-4">
                 <div class="card-header bg-white">
@@ -219,53 +237,54 @@ if (isset($_POST['simpan_buku'])) {
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php
-                            // LOGIKA PENCARIAN BARU
-                            if (isset($_GET['keyword']) && $_GET['keyword'] != '') {
-                                $keyword = mysqli_real_escape_string($koneksi, $_GET['keyword']);
-                                // Mencari berdasarkan kode, judul, penulis, atau kategori
-                                $query = mysqli_query($koneksi, "SELECT * FROM buku WHERE 
-                                          kode_buku LIKE '%$keyword%' OR 
-                                          judul_buku LIKE '%$keyword%' OR 
-                                          penulis LIKE '%$keyword%' OR 
-                                          kategori LIKE '%$keyword%' 
-                                          ORDER BY id_buku DESC");
-                            } else {
-                                // Jika tidak ada pencarian, tampilkan semua data bawaan kamu
-                                $query = mysqli_query($koneksi, "SELECT * FROM buku ORDER BY id_buku DESC");
-                            }
-                            
-                            // Variabel untuk penomoran otomatis tabel
-                            $no = 1;
-                            
-                            // Looping untuk menampilkan data secara dinamis
-                            while ($data = mysqli_fetch_array($query)) {
-                            ?>
-                                <td><?php echo $no++; ?></td>
-                                <td><?php echo $data['kode_buku']; ?></td>
-                                <td><?php echo $data['judul_buku']; ?></td>
-                                <td><?php echo $data['penulis']; ?></td>
-                                <td><?php echo $data['kategori']; ?></td>
-                                <td><?php echo $data['stok']; ?></td>
-                                <td>
-                                    <!-- Menampilkan status dengan badge warna sesuai kondisi -->
-                                    <?php if($data['status'] == 'tersedia') { ?>
-                                        <span class="badge text-bg-success">Tersedia</span>
-                                    <?php } else { ?>
-                                        <span class="badge text-bg-warning"><?php echo ucfirst($data['status']); ?></span>
-                                    <?php } ?>
-                                </td>
-                                <td>
-                                    <!-- Tombol aksi yang membawa parameter ID Buku untuk Edit & Hapus -->
-                                    <a href="buku.php?edit=<?php echo $data['id_buku']; ?>" class="btn btn-sm btn-warning">Edit</a>
-                                    <a href="buku.php?hapus=<?php echo $data['id_buku']; ?>" class="btn btn-sm btn-danger">Hapus</a>
-                                </td>
-                            </tr>
-                            <?php 
-                            } // Penutup perulangan while
-                            ?>
-                        </tbody>
+                   <tbody>
+    <?php 
+    $no = 1;
+    
+    // Logika pencariannya
+    if (isset($_GET['cari']) && $_GET['cari'] != '') {
+        $cari = mysqli_real_escape_string($koneksi, $_GET['cari']);
+        $query_tampil = "SELECT * FROM buku WHERE judul_buku LIKE '%$cari%' OR kode_buku LIKE '%$cari%' ORDER BY id_buku DESC";
+    } else {
+        $query_tampil = "SELECT * FROM buku ORDER BY id_buku DESC";
+    }
+    
+    $data_buku = mysqli_query($koneksi, $query_tampil);
+    
+    // CEK APAKAH DATANYA ADA (Lebih dari 0)
+    if (mysqli_num_rows($data_buku) > 0) {
+        while($row = mysqli_fetch_array($data_buku)) {
+            ?>
+            <tr>
+                <td><?php echo $no++; ?></td>
+                <td><?php echo $row['kode_buku']; ?></td>
+                <td><?php echo $row['judul_buku']; ?></td>
+                <td><?php echo $row['penulis']; ?></td>
+                <td><?php echo $row['kategori']; ?></td>
+                <td><?php echo $row['stok']; ?></td>
+                <td><?php echo $row['status']; ?></td>
+                <td>
+                    <!-- Tombol Edit & Hapus Sudah Dikembalikan -->
+                    <div class="d-flex gap-1">
+                        <a href="buku.php?edit=<?php echo $row['id_buku']; ?>" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="buku.php?hapus=<?php echo $row['id_buku']; ?>" 
+                           class="btn btn-sm btn-danger" 
+                           onclick="return confirm('Yakin ingin menghapus data buku ini?')">Hapus</a>
+                    </div>
+                </td>
+            </tr>
+            <?php 
+        } 
+    } else {
+        // JIKA BUKU TIDAK DITEMUKAN, TAMPILKAN KATA-KATA INI
+        echo '<tr>
+                <td colspan="8" class="text-center py-4 text-muted">
+                    <i>Waduh, buku yang kamu cari tidak ditemukan. Coba gunakan kata kunci lain.</i>
+                </td>
+              </tr>';
+    }
+    ?>
+</tbody>
                     </table>
                 </div>
             </div>
